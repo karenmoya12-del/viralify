@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Viralify — AI Viral Content Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0e0e0e;
+    --paper: #f5f2ec;
+    --cream: #ede9df;
+    --accent: #c9a84c;
+    --accent-dark: #9b7a2e;
+    --muted: #7a7469;
+    --white: #ffffff;
+    --border: rgba(14,14,14,0.12);
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-weight: 300;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem 4rem;
+    background: rgba(245,242,236,0.88);
+    backdrop-filter: blur(12px);
+    border-bottom: 0.5px solid var(--border);
+  }
+  .nav-logo { font-family: var(--serif); font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; }
+  .nav-links { display: flex; gap: 2.5rem; }
+  .nav-links a { font-size: 0.85rem; font-weight: 400; color: var(--muted); text-decoration: none; letter-spacing: 0.04em; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-cta {
+    background: var(--ink); color: var(--paper);
+    padding: 0.6rem 1.5rem; border-radius: 2px;
+    font-size: 0.82rem; font-weight: 500; letter-spacing: 0.06em;
+    text-decoration: none; text-transform: uppercase;
+    transition: background 0.2s;
+  }
+  .nav-cta:hover { background: #2a2a2a; }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    text-align: center;
+    padding: 8rem 2rem 6rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 50% 40%, rgba(201,168,76,0.10) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    font-size: 0.72rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--accent-dark); margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .hero-eyebrow::before, .hero-eyebrow::after {
+    content: ''; display: block; width: 32px; height: 0.5px; background: var(--accent);
+  }
+  .hero h1 {
+    font-family: var(--serif); font-size: clamp(3rem, 8vw, 6.5rem);
+    font-weight: 400; line-height: 1.05; letter-spacing: -0.02em;
+    max-width: 800px; margin: 0 auto 0.5rem;
+  }
+  .hero h1 em { font-style: italic; color: var(--accent-dark); }
+  .hero-sub {
+    font-size: 1.05rem; color: var(--muted); max-width: 500px;
+    margin: 1.75rem auto 2.75rem; line-height: 1.75;
+  }
+  .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--ink); color: var(--paper);
+    padding: 1rem 2.5rem; border-radius: 2px;
+    font-size: 0.88rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+    text-decoration: none; transition: all 0.2s; border: 1.5px solid var(--ink);
+  }
+  .btn-primary:hover { background: transparent; color: var(--ink); }
+  .btn-secondary {
+    background: transparent; color: var(--ink);
+    padding: 1rem 2.5rem; border-radius: 2px;
+    font-size: 0.88rem; font-weight: 400; letter-spacing: 0.06em;
+    text-decoration: none; border: 1px solid var(--border);
+    transition: border-color 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--ink); }
+
+  .hero-proof {
+    margin-top: 4rem; display: flex; align-items: center; gap: 1.5rem;
+    font-size: 0.8rem; color: var(--muted);
+  }
+  .hero-proof span { display: flex; align-items: center; gap: 0.4rem; }
+  .dot-sep { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+
+  /* ── TICKER ── */
+  .ticker-wrap {
+    overflow: hidden; border-top: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border);
+    background: var(--cream); padding: 0.9rem 0;
+  }
+  .ticker {
+    display: flex; gap: 0; width: max-content;
+    animation: ticker 28s linear infinite;
+  }
+  .ticker-item {
+    padding: 0 3rem; font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); white-space: nowrap; display: flex; align-items: center; gap: 0.75rem;
+  }
+  .ticker-item::after { content: '✦'; color: var(--accent); font-size: 0.55rem; }
+  @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+  /* ── FEATURES ── */
+  section { padding: 7rem 4rem; }
+  .section-label {
+    font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--accent-dark); margin-bottom: 1rem; font-weight: 500;
+  }
+  .section-title {
+    font-family: var(--serif); font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 400; line-height: 1.15; letter-spacing: -0.02em; max-width: 560px;
+  }
+  .section-title em { font-style: italic; }
+
+  .features-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 0; margin-top: 4rem;
+    border: 0.5px solid var(--border);
+  }
+  .feature-card {
+    padding: 2.5rem; border-right: 0.5px solid var(--border);
+    border-bottom: 0.5px solid var(--border);
+    transition: background 0.25s;
+  }
+  .feature-card:hover { background: var(--cream); }
+  .feature-icon {
+    font-size: 1.5rem; margin-bottom: 1.25rem; display: block;
+    line-height: 1;
+  }
+  .feature-card h3 {
+    font-family: var(--serif); font-size: 1.15rem; font-weight: 700;
+    margin-bottom: 0.6rem;
+  }
+  .feature-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.7; }
+
+  /* ── HOW IT WORKS ── */
+  .how-section { background: var(--ink); color: var(--paper); }
+  .how-section .section-label { color: var(--accent); }
+  .how-section .section-title { color: var(--paper); }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4rem; margin-top: 4rem; }
+  .step { position: relative; }
+  .step-num {
+    font-family: var(--serif); font-size: 5rem; font-weight: 700;
+    color: rgba(255,255,255,0.06); line-height: 1;
+    margin-bottom: -1rem; display: block;
+  }
+  .step h3 {
+    font-family: var(--serif); font-size: 1.3rem; font-weight: 400;
+    margin-bottom: 0.75rem; color: var(--paper);
+  }
+  .step p { font-size: 0.88rem; color: rgba(245,242,236,0.5); line-height: 1.75; }
+  .step-line {
+    position: absolute; top: 2.5rem; right: -2rem;
+    width: 4rem; height: 0.5px; background: rgba(255,255,255,0.12);
+  }
+
+  /* ── PRICING ── */
+  .pricing-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--border); margin-top: 4rem; border: 0.5px solid var(--border);
+  }
+  .pricing-card {
+    background: var(--paper); padding: 2.5rem;
+    position: relative; transition: background 0.2s;
+  }
+  .pricing-card.featured { background: var(--ink); color: var(--paper); }
+  .plan-name {
+    font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase;
+    font-weight: 500; color: var(--muted); margin-bottom: 1.5rem;
+  }
+  .pricing-card.featured .plan-name { color: rgba(245,242,236,0.5); }
+  .price {
+    font-family: var(--serif); font-size: 3.2rem; font-weight: 700;
+    line-height: 1; margin-bottom: 0.25rem;
+  }
+  .price-period { font-size: 0.8rem; color: var(--muted); margin-bottom: 2rem; }
+  .pricing-card.featured .price-period { color: rgba(245,242,236,0.45); }
+  .pricing-features { list-style: none; margin-bottom: 2.5rem; }
+  .pricing-features li {
+    font-size: 0.85rem; padding: 0.6rem 0;
+    border-bottom: 0.5px solid var(--border); display: flex; gap: 0.6rem;
+    color: var(--muted);
+  }
+  .pricing-card.featured .pricing-features li { border-color: rgba(255,255,255,0.08); color: rgba(245,242,236,0.65); }
+  .pricing-features li::before { content: '—'; color: var(--accent); flex-shrink: 0; }
+  .plan-btn {
+    display: block; text-align: center; padding: 0.85rem;
+    border: 1px solid var(--border); border-radius: 2px;
+    font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 500; text-decoration: none; color: var(--ink); transition: all 0.2s;
+  }
+  .pricing-card.featured .plan-btn {
+    background: var(--accent); color: var(--ink); border-color: var(--accent);
+  }
+  .plan-btn:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .pricing-card.featured .plan-btn:hover { background: var(--accent-dark); border-color: var(--accent-dark); color: var(--white); }
+
+  /* ── TESTIMONIALS ── */
+  .testi-section { background: var(--cream); }
+  .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 4rem; }
+  .testi-card {
+    background: var(--paper); padding: 2rem;
+    border: 0.5px solid var(--border); border-radius: 2px;
+  }
+  .testi-quote {
+    font-family: var(--serif); font-size: 1rem; font-style: italic;
+    line-height: 1.7; margin-bottom: 1.25rem; color: var(--ink);
+  }
+  .testi-author { display: flex; align-items: center; gap: 0.75rem; }
+  .testi-avatar {
+    width: 36px; height: 36px; border-radius: 50%; background: var(--cream);
+    border: 0.5px solid var(--border); display: flex; align-items: center;
+    justify-content: center; font-size: 0.8rem; font-weight: 500; color: var(--muted);
+  }
+  .testi-name { font-size: 0.82rem; font-weight: 500; }
+  .testi-handle { font-size: 0.75rem; color: var(--muted); }
+
+  /* ── CTA STRIP ── */
+  .cta-section {
+    text-align: center; padding: 8rem 4rem;
+    border-top: 0.5px solid var(--border);
+  }
+  .cta-section h2 {
+    font-family: var(--serif); font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; max-width: 700px;
+    margin: 0 auto 1rem;
+  }
+  .cta-section h2 em { font-style: italic; color: var(--accent-dark); }
+  .cta-section p { color: var(--muted); margin-bottom: 2.5rem; }
+  .cta-note { font-size: 0.75rem; color: var(--muted); margin-top: 1rem; letter-spacing: 0.05em; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--ink); color: rgba(245,242,236,0.45);
+    padding: 3rem 4rem; display: flex;
+    justify-content: space-between; align-items: center;
+    font-size: 0.78rem;
+  }
+  .footer-logo { font-family: var(--serif); font-size: 1.2rem; color: var(--paper); font-weight: 700; }
+  .footer-links { display: flex; gap: 2rem; }
+  .footer-links a { color: rgba(245,242,236,0.45); text-decoration: none; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--paper); }
+
+  /* ── DEMO EMBED ── */
+  .demo-section { background: var(--cream); }
+  .demo-wrap {
+    margin-top: 3.5rem;
+    background: var(--paper);
+    border: 0.5px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .demo-bar {
+    background: var(--cream); border-bottom: 0.5px solid var(--border);
+    padding: 0.75rem 1.25rem; display: flex; align-items: center; gap: 0.5rem;
+  }
+  .demo-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .demo-bar-label {
+    margin-left: auto; font-size: 0.72rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .demo-inner { padding: 2.5rem 2rem; }
+
+  /* ── DEMO APP INTERNALS ── */
+  .d-input-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+  .d-input-row input {
+    flex: 1; padding: 10px 14px;
+    border: 0.5px solid var(--border); border-radius: 2px;
+    font-size: 14px; font-family: var(--sans);
+    background: var(--paper); color: var(--ink);
+  }
+  .d-input-row input:focus { outline: none; border-color: var(--ink); }
+  .d-selects { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.25rem; }
+  .d-selects select {
+    padding: 9px 12px; border: 0.5px solid var(--border); border-radius: 2px;
+    font-size: 13px; font-family: var(--sans);
+    background: var(--paper); color: var(--ink); appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+  }
+  .d-types { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.5rem; }
+  .d-type-btn {
+    padding: 6px 14px; border: 0.5px solid var(--border); border-radius: 20px;
+    font-size: 12px; cursor: pointer; font-family: var(--sans);
+    background: var(--paper); color: var(--muted); transition: all 0.15s;
+  }
+  .d-type-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .d-gen-btn {
+    width: 100%; padding: 12px; background: var(--ink); color: var(--paper);
+    border: none; border-radius: 2px; font-size: 14px; font-weight: 500;
+    font-family: var(--sans); cursor: pointer; letter-spacing: 0.04em; transition: opacity 0.15s;
+  }
+  .d-gen-btn:hover { opacity: 0.82; }
+  .d-gen-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .d-output { margin-top: 2rem; }
+  .d-out-label {
+    font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 0.75rem;
+  }
+  .d-card {
+    background: var(--cream); border-radius: 2px; padding: 1.25rem;
+    margin-bottom: 0.85rem; border: 0.5px solid var(--border);
+  }
+  .d-card-head {
+    font-size: 11px; font-weight: 500; color: var(--muted);
+    margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .d-copy {
+    padding: 3px 9px; border: 0.5px solid var(--border); border-radius: 2px;
+    font-size: 11px; font-family: var(--sans);
+    background: var(--paper); color: var(--muted); cursor: pointer;
+  }
+  .d-copy:hover { background: var(--cream); }
+  .d-text { font-size: 14px; color: var(--ink); line-height: 1.7; white-space: pre-wrap; }
+  .d-dots { display: inline-flex; gap: 4px; align-items: center; }
+  .d-dot-a { width: 5px; height: 5px; border-radius: 50%; background: var(--muted); animation: dblink 1.2s infinite; }
+  .d-dot-a:nth-child(2) { animation-delay: 0.2s; }
+  .d-dot-a:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dblink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
+  .d-upsell {
+    margin-top: 2rem; padding: 1.25rem; border: 0.5px solid var(--accent);
+    border-radius: 2px; background: rgba(201,168,76,0.06);
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  }
+  .d-upsell p { font-size: 0.85rem; color: var(--ink); }
+  .d-upsell strong { font-weight: 500; }
+  .d-upsell a {
+    flex-shrink: 0; padding: 0.6rem 1.25rem; background: var(--ink); color: var(--paper);
+    font-size: 0.8rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase;
+    text-decoration: none; border-radius: 2px; white-space: nowrap; transition: opacity 0.2s;
+  }
+  .d-upsell a:hover { opacity: 0.82; }
+
+  /* ── ANIMATIONS ── */
+  .fade-up { opacity: 0; transform: translateY(28px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    section { padding: 5rem 1.5rem; }
+    .steps { grid-template-columns: 1fr; gap: 3rem; }
+    .step-line { display: none; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .testi-grid { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 1.5rem; text-align: center; padding: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Viralify</div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">How it works</a>
+    <a href="#demo">Try it</a>
+    <a href="#pricing">Pricing</a>
+  </div>
+  <a href="#pricing" class="nav-cta">Start free</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">AI-powered content</div>
+  <h1>Go <em>viral</em><br>on demand.</h1>
+  <p class="hero-sub">Hooks, captions, scripts, ideas, and B-roll — generated in seconds for any niche, any platform.</p>
+  <div class="hero-actions">
+    <a href="#pricing" class="btn-primary">Try it free</a>
+    <a href="#how" class="btn-secondary">See how it works</a>
+  </div>
+  <div class="hero-proof">
+    <span>✦ No credit card required</span>
+    <div class="dot-sep"></div>
+    <span>✦ 5 content types</span>
+    <div class="dot-sep"></div>
+    <span>✦ All major platforms</span>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker">
+    <div class="ticker-item">Viral hooks</div>
+    <div class="ticker-item">Reel scripts</div>
+    <div class="ticker-item">Caption copy</div>
+    <div class="ticker-item">Content ideas</div>
+    <div class="ticker-item">B-roll shots</div>
+    <div class="ticker-item">TikTok</div>
+    <div class="ticker-item">Instagram</div>
+    <div class="ticker-item">YouTube Shorts</div>
+    <div class="ticker-item">LinkedIn</div>
+    <div class="ticker-item">Twitter / X</div>
+    <div class="ticker-item">Viral hooks</div>
+    <div class="ticker-item">Reel scripts</div>
+    <div class="ticker-item">Caption copy</div>
+    <div class="ticker-item">Content ideas</div>
+    <div class="ticker-item">B-roll shots</div>
+    <div class="ticker-item">TikTok</div>
+    <div class="ticker-item">Instagram</div>
+    <div class="ticker-item">YouTube Shorts</div>
+    <div class="ticker-item">LinkedIn</div>
+    <div class="ticker-item">Twitter / X</div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="fade-up">
+    <div class="section-label">What you get</div>
+    <h2 class="section-title">Everything your content <em>needs</em> to perform.</h2>
+  </div>
+  <div class="features-grid fade-up">
+    <div class="feature-card">
+      <span class="feature-icon">⚡</span>
+      <h3>Viral hooks</h3>
+      <p>Pattern-interrupt openers engineered to stop the scroll in the first 3 seconds — the most critical window on any platform.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">✍️</span>
+      <h3>Scroll-stopping captions</h3>
+      <p>Platform-native captions with hooks, value, calls-to-action, and hashtags baked in — ready to copy and post.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎬</span>
+      <h3>Reel scripts</h3>
+      <p>Timed 30-second scripts structured around proven frameworks: Hook → Problem → Solution → Payoff → CTA.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">💡</span>
+      <h3>Content ideas</h3>
+      <p>Five unique content angles for your niche, with context on why each idea has viral potential right now.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎥</span>
+      <h3>B-roll shot lists</h3>
+      <p>Director-level shot descriptions with duration cues — so you film smarter, edit faster, and look more professional.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎯</span>
+      <h3>Platform intelligence</h3>
+      <p>Every output is tuned to the culture and algorithm of your chosen platform — TikTok, Instagram, LinkedIn, and more.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how" class="how-section">
+  <div class="fade-up">
+    <div class="section-label">The process</div>
+    <h2 class="section-title" style="color:var(--paper)">Three steps to your<br><em>best-performing post.</em></h2>
+  </div>
+  <div class="steps fade-up">
+    <div class="step">
+      <span class="step-num">01</span>
+      <h3>Enter your topic</h3>
+      <p>Type your niche, product, or idea. The more specific you are, the more targeted your content will be.</p>
+      <div class="step-line"></div>
+    </div>
+    <div class="step">
+      <span class="step-num">02</span>
+      <h3>Pick your platform & tone</h3>
+      <p>Choose the platform you're posting on and the tone that fits your brand — bold, calm, funny, educational, and more.</p>
+      <div class="step-line"></div>
+    </div>
+    <div class="step">
+      <span class="step-num">03</span>
+      <h3>Generate & publish</h3>
+      <p>Hit generate. Get five content formats instantly. Copy with one click and post — or refine until it's perfect.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testi-section">
+  <div class="fade-up">
+    <div class="section-label">From creators</div>
+    <h2 class="section-title">What they're <em>saying.</em></h2>
+  </div>
+  <div class="testi-grid fade-up">
+    <div class="testi-card">
+      <p class="testi-quote">"I went from posting twice a week to posting daily. Viralify cut my content planning time by 80%."</p>
+      <div class="testi-author">
+        <div class="testi-avatar">SC</div>
+        <div>
+          <div class="testi-name">Sophie Chen</div>
+          <div class="testi-handle">@sophiecreates · 180K followers</div>
+        </div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <p class="testi-quote">"The hooks it generates are genuinely good. I used one and hit 2M views in 48 hours. Nothing I wrote myself ever did that."</p>
+      <div class="testi-author">
+        <div class="testi-avatar">MR</div>
+        <div>
+          <div class="testi-name">Marcus Reid</div>
+          <div class="testi-handle">@marcusfitness · 420K followers</div>
+        </div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <p class="testi-quote">"The B-roll shot lists are something I didn't know I needed. My editing workflow is completely transformed."</p>
+      <div class="testi-author">
+        <div class="testi-avatar">AL</div>
+        <div>
+          <div class="testi-name">Ava Laurence</div>
+          <div class="testi-handle">@avaslifestyle · 95K followers</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO EMBED -->
+<section id="demo" class="demo-section">
+  <div class="fade-up">
+    <div class="section-label">Try it now — free</div>
+    <h2 class="section-title">See it work on <em>your</em> content.</h2>
+    <p style="color:var(--muted);margin-top:1rem;font-size:0.92rem;max-width:480px;">No sign-up. No credit card. Just type your topic and watch it generate.</p>
+  </div>
+  <div class="demo-wrap fade-up">
+    <div class="demo-bar">
+      <div class="demo-dot" style="background:#e57373"></div>
+      <div class="demo-dot" style="background:#ffb74d;margin-left:5px"></div>
+      <div class="demo-dot" style="background:#81c784;margin-left:5px"></div>
+      <span class="demo-bar-label">Viralify · Live demo</span>
+    </div>
+    <div class="demo-inner">
+      <div class="d-input-row">
+        <input type="text" id="d-topic" placeholder="Type your topic or niche — e.g. morning routine, fitness, travel..." />
+      </div>
+      <div class="d-selects">
+        <select id="d-platform">
+          <option value="Instagram Reels">Instagram Reels</option>
+          <option value="TikTok">TikTok</option>
+          <option value="YouTube Shorts">YouTube Shorts</option>
+          <option value="LinkedIn">LinkedIn</option>
+          <option value="Twitter/X">Twitter / X</option>
+        </select>
+        <select id="d-tone">
+          <option value="bold and punchy">Bold & punchy</option>
+          <option value="calm and aesthetic">Calm & aesthetic</option>
+          <option value="educational and clear">Educational</option>
+          <option value="funny and relatable">Funny & relatable</option>
+          <option value="inspirational">Inspirational</option>
+        </select>
+      </div>
+      <div class="d-types" id="d-types">
+        <button class="d-type-btn active" data-t="Viral Hook">Viral hook</button>
+        <button class="d-type-btn active" data-t="Caption">Caption</button>
+        <button class="d-type-btn active" data-t="Reels Script">Reels script</button>
+        <button class="d-type-btn active" data-t="Content Ideas">Content ideas</button>
+        <button class="d-type-btn active" data-t="B-Roll Shot List">B-roll shots</button>
+      </div>
+      <button class="d-gen-btn" id="d-btn" onclick="demoGenerate()">Generate my content</button>
+      <div id="d-output" class="d-output" style="display:none"></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="fade-up">
+    <div class="section-label">Pricing</div>
+    <h2 class="section-title">Simple, <em>honest</em> plans.</h2>
+  </div>
+  <div class="pricing-grid fade-up">
+    <div class="pricing-card">
+      <div class="plan-name">Free</div>
+      <div class="price">$0</div>
+      <div class="price-period">forever</div>
+      <ul class="pricing-features">
+        <li>5 generations per day</li>
+        <li>All 5 content types</li>
+        <li>3 platforms</li>
+        <li>Copy to clipboard</li>
+      </ul>
+      <a href="#" class="plan-btn">Get started</a>
+    </div>
+    <div class="pricing-card featured">
+      <div class="plan-name">Pro</div>
+      <div class="price">$19</div>
+      <div class="price-period">per month</div>
+      <ul class="pricing-features">
+        <li>Unlimited generations</li>
+        <li>All 5 content types</li>
+        <li>All platforms</li>
+        <li>Custom brand voice</li>
+        <li>Bulk generate mode</li>
+        <li>Export to CSV / Notion</li>
+      </ul>
+      <a href="#" class="plan-btn">Start Pro — $19/mo</a>
+    </div>
+    <div class="pricing-card">
+      <div class="plan-name">Agency</div>
+      <div class="price">$79</div>
+      <div class="price-period">per month</div>
+      <ul class="pricing-features">
+        <li>Everything in Pro</li>
+        <li>5 team seats</li>
+        <li>White-label exports</li>
+        <li>Client workspaces</li>
+        <li>Priority support</li>
+      </ul>
+      <a href="#" class="plan-btn">Start Agency</a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2 class="fade-up">Your next viral post<br>is one click <em>away.</em></h2>
+  <p class="fade-up">Join thousands of creators generating content that actually performs.</p>
+  <a href="#pricing" class="btn-primary fade-up">Generate for free</a>
+  <p class="cta-note fade-up">No credit card required · Cancel anytime</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Viralify</div>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Contact</a>
+    <a href="#">Affiliates</a>
+  </div>
+  <div>© 2025 Viralify. All rights reserved.</div>
+</footer>
+
+<script>
+const demoActiveTypes = new Set(["Viral Hook","Caption","Reels Script","Content Ideas","B-Roll Shot List"]);
+document.querySelectorAll('.d-type-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const t = btn.dataset.t;
+    if(demoActiveTypes.has(t)) { if(demoActiveTypes.size > 1) { demoActiveTypes.delete(t); btn.classList.remove('active'); } }
+    else { demoActiveTypes.add(t); btn.classList.add('active'); }
+  });
+});
+
+function dCopy(id) { const el = document.getElementById(id); if(el) navigator.clipboard.writeText(el.innerText).catch(()=>{}); }
+
+async function demoGenerate() {
+  const topic = document.getElementById('d-topic').value.trim();
+  if(!topic) { document.getElementById('d-topic').focus(); return; }
+  const platform = document.getElementById('d-platform').value;
+  const tone = document.getElementById('d-tone').value;
+  const types = Array.from(demoActiveTypes);
+  const btn = document.getElementById('d-btn');
+  const out = document.getElementById('d-output');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="d-dots"><span class="d-dot-a"></span><span class="d-dot-a"></span><span class="d-dot-a"></span></span>';
+  out.style.display = 'none'; out.innerHTML = '';
+
+  const sections = types.map(type => {
+    if(type==="Viral Hook") return `"viral_hook":"A single irresistible opening line (max 15 words) that stops the scroll."`;
+    if(type==="Caption") return `"caption":"A complete caption with hook, value, CTA, and 5 hashtags. Max 120 words."`;
+    if(type==="Reels Script") return `"reels_script":"30-second script: HOOK (0-3s), PROBLEM (3-8s), SOLUTION (8-20s), PAYOFF (20-28s), CTA (28-30s)."`;
+    if(type==="Content Ideas") return `"content_ideas":["Idea 1","Idea 2","Idea 3","Idea 4","Idea 5"]`;
+    if(type==="B-Roll Shot List") return `"broll_shots":["Shot 1 (desc + duration)","Shot 2","Shot 3","Shot 4","Shot 5","Shot 6"]`;
+    return '';
+  }).filter(Boolean).join(',');
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        model:"claude-sonnet-4-20250514", max_tokens:1000,
+        system:`You are a viral content strategist for ${platform}. Tone: ${tone}. Return ONLY valid JSON, no backticks, no markdown.`,
+        messages:[{role:"user",content:`Topic: "${topic}"\nReturn: {${sections}}`}]
+      })
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error();
+    const raw = data.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
+    const p = JSON.parse(raw);
+
+    out.innerHTML = '<div class="d-out-label">Your generated content</div>';
+    let i = 0;
+    const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const card = (id,title,text) => `<div class="d-card"><div class="d-card-head"><span>${title}</span><button class="d-copy" onclick="dCopy('${id}')">Copy</button></div><div class="d-text" id="${id}">${esc(text)}</div></div>`;
+
+    if(p.viral_hook) out.innerHTML += card('dh'+i++,'Viral hook', p.viral_hook);
+    if(p.caption) out.innerHTML += card('dc'+i++,'Caption', p.caption);
+    if(p.reels_script) out.innerHTML += card('ds'+i++,'Reels script', p.reels_script);
+    if(p.content_ideas) out.innerHTML += card('di'+i++,'Content ideas', Array.isArray(p.content_ideas)?p.content_ideas.join('\n\n'):p.content_ideas);
+    if(p.broll_shots) out.innerHTML += card('db'+i++,'B-roll shot list', Array.isArray(p.broll_shots)?p.broll_shots.join('\n'):p.broll_shots);
+
+    out.innerHTML += `<div class="d-upsell"><p><strong>Want unlimited generations?</strong> Upgrade to Pro for unlimited content, all platforms, and custom brand voice.</p><a href="#pricing">See plans</a></div>`;
+    out.style.display = 'block';
+  } catch(e) { out.innerHTML = '<p style="font-size:13px;color:var(--muted)">Something went wrong — please try again.</p>'; out.style.display='block'; }
+
+  btn.disabled = false; btn.textContent = 'Generate my content';
+}
+((entries) => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.12 });
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
